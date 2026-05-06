@@ -1,0 +1,156 @@
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import MaxPooling2D
+from tensorflow.keras.layers import Flatten
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.datasets import fashion_mnist
+import matplotlib.pyplot as plt
+import numpy as np
+
+# ---------------------------------------------------
+# Load Dataset
+# ---------------------------------------------------
+
+(X_train, y_train), (X_test, y_test) = fashion_mnist.load_data()
+
+# ---------------------------------------------------
+# Normalize Data
+# ---------------------------------------------------
+
+X_train = X_train / 255.0
+X_test = X_test / 255.0
+
+# ---------------------------------------------------
+# Reshape Data for CNN
+# ---------------------------------------------------
+
+X_train = X_train.reshape(-1, 28, 28, 1)
+X_test = X_test.reshape(-1, 28, 28, 1)
+
+# ---------------------------------------------------
+# Build CNN Model
+# ---------------------------------------------------
+
+model = Sequential()
+
+# Convolution Layer
+model.add(Conv2D(
+    32,
+    (3,3),
+    activation='relu',
+    input_shape=(28,28,1)
+))
+
+# Max Pooling Layer
+model.add(MaxPooling2D((2,2)))
+
+# Second Convolution Layer
+model.add(Conv2D(
+    64,
+    (3,3),
+    activation='relu'
+))
+
+# Second Pooling Layer
+model.add(MaxPooling2D((2,2)))
+
+# Flatten Layer
+model.add(Flatten())
+
+# Fully Connected Layer
+model.add(Dense(
+    128,
+    activation='relu'
+))
+
+# Output Layer
+model.add(Dense(
+    10,
+    activation='softmax'
+))
+
+# ---------------------------------------------------
+# Compile Model
+# ---------------------------------------------------
+
+model.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# ---------------------------------------------------
+# Train Model
+# ---------------------------------------------------
+
+history = model.fit(
+    X_train,
+    y_train,
+    epochs=10,
+    validation_split=0.2,
+    verbose=1
+)
+
+# ---------------------------------------------------
+# Evaluate Model
+# ---------------------------------------------------
+
+loss, accuracy = model.evaluate(
+    X_test,
+    y_test
+)
+
+print("\nTest Accuracy:", accuracy)
+
+# ---------------------------------------------------
+# Predictions
+# ---------------------------------------------------
+
+predictions = model.predict(X_test)
+
+class_names = [
+    'T-shirt/top',
+    'Trouser',
+    'Pullover',
+    'Dress',
+    'Coat',
+    'Sandal',
+    'Shirt',
+    'Sneaker',
+    'Bag',
+    'Ankle boot'
+]
+
+print("\nSample Predictions:\n")
+
+for i in range(5):
+
+    predicted_label = np.argmax(predictions[i])
+
+    print("Predicted:",
+          class_names[predicted_label])
+
+    print("Actual:",
+          class_names[y_test[i]])
+
+    print()
+
+# ---------------------------------------------------
+# Plot Accuracy Graph
+# ---------------------------------------------------
+
+plt.plot(history.history['accuracy'],
+         label='Training Accuracy')
+
+plt.plot(history.history['val_accuracy'],
+         label='Validation Accuracy')
+
+plt.xlabel("Epochs")
+plt.ylabel("Accuracy")
+
+plt.title("Training vs Validation Accuracy")
+
+plt.legend()
+
+plt.show()
