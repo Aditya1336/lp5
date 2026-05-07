@@ -1,0 +1,60 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+
+# Load dataset
+data = pd.read_csv("google.csv")
+
+# Take only Open price column
+prices = data[['Open']].values
+
+# Scale data between 0 and 1
+scaler = MinMaxScaler()
+prices = scaler.fit_transform(prices)
+
+# Create input and output data
+X = []
+y = []
+
+for i in range(10, len(prices)):
+    X.append(prices[i-10:i])
+    y.append(prices[i])
+
+X = np.array(X)
+y = np.array(y)
+
+# Create model
+model = Sequential()
+
+# LSTM layer
+model.add(LSTM(50, input_shape=(10,1)))
+
+# Output layer
+model.add(Dense(1))
+
+# Compile model
+model.compile(
+    optimizer='adam',
+    loss='mean_squared_error'
+)
+
+# Train model
+model.fit(X, y, epochs=5)
+
+# Predict
+predicted = model.predict(X)
+
+# Convert back to original values
+predicted = scaler.inverse_transform(predicted)
+real = scaler.inverse_transform(y)
+
+# Plot graph
+plt.plot(real, label='Real Price')
+plt.plot(predicted, label='Predicted Price')
+
+plt.legend()
+plt.show()
